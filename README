@@ -1,0 +1,43 @@
+To use this python client for deltacloud you need to:
+- install deltacloud server
+
+- import deltacloud python library and create a connection with deltacloud server
+    Ex: from deltacloud import DeltaCloud
+	dc = DeltaCloud(username, password)
+  
+  You can also pass host, port and handler parameters if different from defaults.
+  If you do not pass these parameters they are defaulted to:
+        host - '0.0.0.0'
+        port - 3001        
+        handler - '/api'
+
+- use following library functions to create instances, list volume snapshots, terminate 
+  instance, get details of an image etc.  	           
+
+  Available library functions:
+
+  get_all_flavors()
+  get_all_realms()
+  get_all_images()
+  get_all_instances()
+  get_all_storage_volumes()
+  get_all_storage_snapshots()
+
+  To get details of a particular entity identified by id:	
+  get_flavor(flavorId)
+  get_realm(realmId)	
+  get_image(imageId)
+  get_instance(instanceId)
+  get_storage_volume(volumeId)
+  get_storage_snapshot(snapshotId)
+
+  To create an instance:
+  instance = image.run(opts)
+
+  To start, stop or reboot and instance:
+  instance.stop()
+  instance.reboot() 
+  instance.start()
+
+In addition there is a client-test script in tests directory which demonstrates
+use of this client.

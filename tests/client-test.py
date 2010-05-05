@@ -1,6 +1,8 @@
 import os
 import sys
 
+sys.path.append("../src")
+
 import deltacloud
 from deltacloud import DeltaCloud
 

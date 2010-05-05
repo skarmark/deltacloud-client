@@ -70,28 +70,11 @@ Deltacloud objects
 """
 class DeltaCloudImage(DeltaCloudObject):
 
-   def run(self, name, flavor_id=None, public_key=None, realm_id=None, address=None, volume_id=None, mount_point=None, quantity=None):
-        cmd = '/instances'
-        params = {"image_id": self.id}
+   def run(self, opts):
+       cmd = '/instances'
+       opts["image_id"] = self.id
 
-	if name:
-            params["name"] = name
-	if flavor_id:
-            params["flavor_id"] = flavor_id
-	if public_key:
-            params["public_key"] = public_key
-        if realm_id:
-            params["realm_id"] = realm_id
-	if address:
-            params["address"] = address
-	if volume_id:
-            params["volume_id"] = volume_id
-	if mount_point:
-            params["mount_point"] = mount_point
-	if quantity:
-            params["quantity"] = quantity
-
-	return DeltaCloudInstance(self.connection.conn.request_post(cmd, urllib.urlencode(params))['instance'], self.connection)
+       return DeltaCloudInstance(self.connection.conn.request_post(cmd, urllib.urlencode(opts))['instance'], self.connection)
 
 class DeltaCloudRealm(DeltaCloudObject):
 	pass
