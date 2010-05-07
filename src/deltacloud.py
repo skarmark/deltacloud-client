@@ -11,6 +11,8 @@ import os
 import urllib
 import time
 import simplejson as json
+from xml.dom import minidom
+
 
 class MissingEnvVarException(Exception):
     def __init__(self, envVar):
@@ -41,7 +43,35 @@ class Restlib(object):
         if not len(rinfo):
             return None
         return json.loads(rinfo)
+    
         
+    def request_get(self, method):
+        return self._request("GET", method)
+
+    def request_post(self, method, params=""):
+        return self._request("POST", method, params)
+
+
+
+class RestlibXML(object):
+    """
+     A wrapper around httplib to make rest calls easier
+    """
+    def __init__(self, host, port, apihandler):
+        self.host = host
+        self.port = port
+        self.apihandler = apihandler
+        self.headers = { "Content-Type" : "application/x-www-form-urlencoded",
+                         "Accept" : "application/xml"}
+
+    def _request(self, request_type, method, info=None):
+        handler = self.apihandler + method
+        conn = httplib.HTTPConnection(self.host, self.port)
+        conn.request(request_type, handler, body=info, headers=self.headers)
+        response = conn.getresponse()
+        xmldoc = minidom.parse(response)
+        return xmldoc
+
     def request_get(self, method):
         return self._request("GET", method)
 
@@ -64,6 +94,14 @@ class DeltaCloudObject(dict):
 
     def __getattr__(self, attr):
         return self[attr]
+
+    def get_node_value(self, node, key):
+	try:
+            value = node.getElementsByTagName(key)[0].firstChild.data
+            return value
+	except: 
+            return None
+    
     	
 """ 
 Deltacloud objects
@@ -73,8 +111,13 @@ class DeltaCloudImage(DeltaCloudObject):
    def run(self, opts):
        cmd = '/instances'
        opts["image_id"] = self.id
-
+       try:
+           retcode =  self.connection.conn.request_post(cmd, urllib.urlencode(opts))
+       except RestlibException, e:
+           return False
+       
        return DeltaCloudInstance(self.connection.conn.request_post(cmd, urllib.urlencode(opts))['instance'], self.connection)
+
 
 class DeltaCloudRealm(DeltaCloudObject):
 	pass
@@ -122,6 +165,8 @@ class DeltaCloud:
         self.port = port
         self.handler = handler
         self.conn = None
+        self.connXML = None
+
 
 	self.username = username
 	self.password = password
@@ -133,12 +178,42 @@ class DeltaCloud:
         encoded = base64.encodestring(':'.join((self.username,self.password)))
         basic = 'Basic %s' % encoded[:-1]
         self.conn.headers['Authorization'] = basic
+        self.connXML.headers['Authorization'] = basic
 
     def setUp(self):
         self.conn = Restlib(self.host, self.port, self.handler)
+        self.connXML = RestlibXML(self.host, self.port, self.handler)
+        
 
     def shutDown(self):
         self.conn.close()
+        self.connXML.close()
+
+    def get_node_value(self, node, key):
+	try:
+		value = node.getElementsByTagName(key)[0].firstChild.data
+		return value
+	except: 
+		return None
+
+    def get_node_attribute(self, node, key, attribute_key):
+	try:
+		value = node.getElementsByTagName(key)[0].getAttribute(attribute_key)
+		return value
+	except:
+		return None
+
+
+    def create_instance(self, image_id, opts):
+       cmd = '/instances'
+       opts["image_id"] = image_id
+       try:
+           instance_xmldoc =  self.connXML.request_post(cmd, urllib.urlencode(opts))
+           node = instance_xmldoc.getElementsByTagName('instance')[0]
+       except RestlibException, e:
+           return False    
+       return self.get_node_value(node, 'id')
+    
 
     """ 
     Flavors
@@ -180,16 +255,17 @@ class DeltaCloud:
             image = DeltaCloudImage(item, self)
             images.append(image)
         return images
-        
+
 
     def get_image(self, image_id):
 	cmd = '/images/' + image_id
  	return DeltaCloudImage(self.conn.request_get(cmd)['image'], self)
 	
-
-    """ 
+    """
     Instances
     """
+
+    
     def get_all_instances(self):
 	instances = []
         for item in self.conn.request_get('/instances')['instances']:

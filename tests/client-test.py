@@ -16,9 +16,11 @@ if __name__ == "__main__":
 	if len(sys.argv) < 2:
         	usage()
         	sys.exit(0)
+        username = 'AKIAJENTARYFGLVRT4QA'
+	password = 'OR1KortQSjX0ZrDdOtnxwwh5C4NbSH/fWa118Xpt'
 
-	username = os.environ['DELTACLOUD_USERNAME']
-	password = os.environ['DELTACLOUD_PASSWORD']
+	#username = os.environ['DELTACLOUD_USERNAME']
+	#password = os.environ['DELTACLOUD_PASSWORD']
 	
 	dc  = DeltaCloud(username, password)
         action = sys.argv[1]
