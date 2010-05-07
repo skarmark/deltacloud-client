@@ -32,7 +32,7 @@ To use this python client for deltacloud you need to:
   get_storage_snapshot(snapshotId)
 
   To create an instance:
-  instance = image.run(opts)
+  create_instance(image_id, opts)
 
   To start, stop or reboot and instance:
   instance.stop()
